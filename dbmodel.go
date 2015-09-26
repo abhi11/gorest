@@ -2,7 +2,7 @@ package main
 
 
 type LogMessage struct {
-	Message string `json:"name"`
+	Message string `json:"message"`
 	Timestamp int64 `json:"timestamp"`
 	Severity string `json:"severity"`
 }

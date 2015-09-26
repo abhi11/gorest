@@ -38,4 +38,16 @@ var routes = Routes{
 		"/logs/after/{timestamp}",
 		GetLogsAfter,
 	},
+	Route{
+		"PostLog",
+		"POST",
+		"/log/insert",
+		PostLog,
+	},
+	Route{
+		"PostLog",
+		"POST",
+		"/logs/batchinsert",
+		PostLogsInBath,
+	},
 }

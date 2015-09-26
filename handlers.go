@@ -1,9 +1,11 @@
 package main
 
 import (
+	"io"
 	"fmt"
 	"time"
 	"strconv"
+	"io/ioutil"
 	"net/http"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -11,25 +13,30 @@ import (
 
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
-	w = SetHeaders(w)
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
 	fmt.Fprintf(w, "Hi there")
 }
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
 	logs := LogMessages{
 		LogMessage{
-			Name: "After",
+			Message: "After",
 			Severity: "Debug",
 			Timestamp: time.Now().Unix(),
 		},
 		LogMessage{
-			Name: "Before",
+			Message: "Before",
 			Severity : "Debug",
 			Timestamp: time.Now().Unix(),
 		},
 	}
-	w = SetHeaders(w)
-	if err := json.NewEncoder(w).Encode(logs); err != nil {
+
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
 }
@@ -45,7 +52,7 @@ func GetLogsAfter(w http.ResponseWriter, r *http.Request) {
 
 	logs := LogMessages{
 		LogMessage{
-			Name: "After",
+			Message: "After",
 			Severity: "Debug",
 			Timestamp: timestamp,
 		},
@@ -53,8 +60,10 @@ func GetLogsAfter(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Logs after %s", checkpoint)
 
-	SetHeaders(w)
-	if err := json.NewEncoder(w).Encode(logs); err != nil {
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
 }
@@ -69,7 +78,7 @@ func GetLogsBefore(w http.ResponseWriter, r *http.Request) {
 
 	logs := LogMessages{
 		LogMessage{
-			Name: "Before",
+			Message: "Before",
 			Severity : "Debug",
 			Timestamp: timestamp,
 		},
@@ -77,15 +86,71 @@ func GetLogsBefore(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Logs before %s", checkpoint)
 
-	w = SetHeaders(w)
-	if err := json.NewEncoder(w).Encode(logs); err != nil {
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
 }
 
-func SetHeaders(w http.ResponseWriter) http.ResponseWriter {
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+func PostLog(w http.ResponseWriter, r *http.Request) {
+	var logEntry LogMessage
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 
-	return w
+	if err != nil {
+		panic(err)
+	}
+
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+
+	if err := json.Unmarshal(body, &logEntry); err != nil {
+		w = SetContentType(w)
+		w = SetReturnCode(w, http.StatusUnsupportedMediaType) // cannot process
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	// Insert data in db logEntry
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w, logEntry); err != nil {
+		panic(err)
+	}
+}
+
+func PostLogsInBath(w http.ResponseWriter, r *http.Request) {
+	var logEntries LogMessages
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 20971520))
+
+	if err != nil {
+		panic(err)
+	}
+
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+
+	if err := json.Unmarshal(body, &logEntries); err != nil {
+		w = SetContentType(w)
+		w = SetReturnCode(w, http.StatusUnsupportedMediaType) // cannot process
+
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	// Insert data in db logEntry
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w, logEntries); err != nil {
+		panic(err)
+	}
 }
