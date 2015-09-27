@@ -1,0 +1,51 @@
+[
+    {
+	"log":"Log message 1",
+	"timestamp" : 1223334,
+	"log_level" : "Warn"
+	"twist_device_id" : "twist0"
+    },
+    {
+	"log":"Log message 2",
+	"timestamp" : 1228434,
+	"log_level" : "Error",
+	"twist_device_id" : "twist1"
+    },
+    {
+	"log":"Log message 3",
+	"timestamp" : 1228780,
+	"log_level" : "Debug",
+	"twist_device_id" : "twist2"
+    },
+    {
+	"log":"Log message 4",
+	"timestamp" : 1228793,
+	"log_level" : "Debug",
+	"mobile_device_id" : "mobile1"
+    },
+    {
+	"log":"Log message 5",
+	"timestamp" : 1228803,
+	"log_level" : "Debug",
+	"mobile_device_id" : "mobile2"
+    },
+    {
+	"log": "New log message",
+        "timestamp": 1235000,
+        "log_level": "Error",
+        "twist_device_id": "twist12"
+    },
+    {
+	"log": "Another twist log",
+        "timestamp": 1235700,
+        "log_level": "Debug",
+        "twist_device_id": "twist100"
+    },
+    {
+	"log": "Log message from nexus 6",
+        "timestamp": 1235600,
+        "log_level": "Fatal",
+        "mobile_device_id": "nexus6",
+    }
+
+]

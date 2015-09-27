@@ -18,6 +18,7 @@ A simple rest api interface to query and post logs
   * limit : integer, limit the count of logs
 
 **Note** : All the filters could be combined with each other.
+
 **Pre-Caution** : If both after and before are used together, make sure before > after
 
 ## Usage
@@ -45,10 +46,23 @@ curl -i -X POST -H 'Content-Type: application/json'-d '[{"log":"Another twist lo
 
 ### Note
 **Does not support de-duplication of log entries**
+
 **No Authentication support yet**
 
+### Testing
+* Use the logs.json file to import the data into mongodb
+
+```
+mongoimport --jsonArray --db test --collection logs --file logs.json
+```
+* The above helps in testing the GET APIs only
+* For POST APIs use the curl command
+
+
 ## Running on localhost
-You would need mongodb to run gorest
+You would need mongodb to run gorest.
+And run it on the default port.
+
 ```
 $ mongod
 ```
@@ -61,6 +75,7 @@ $ ./gorest
 ## TODO
 * Refactoring, make separate packages as appropriate
 * Better error handling
+* Add unit tests
 * Add support to have customizable monogdb host
 * Write a script to start gorest [assuming mongodb is present]
 * Adding docker support
