@@ -1,4 +1,4 @@
-### gorest
+# gorest
 A simple rest api interface to query and post logs
 
 
