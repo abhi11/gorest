@@ -27,6 +27,12 @@ var routes = Routes{
 		GetLogs,
 	},
 	Route{
+		"LogsWithTimeStamp",
+		"GET",
+		"/logs/{timestamp}",
+		GetLogsWithTimestamp,
+	},
+	Route{
 		"LogsBefore",
 		"GET",
 		"/logs/before/{timestamp}",

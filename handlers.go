@@ -3,7 +3,6 @@ package main
 import (
 	"io"
 	"fmt"
-	"time"
 	"strconv"
 	"io/ioutil"
 	"net/http"
@@ -20,18 +19,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
-	logs := LogMessages{
-		LogMessage{
-			Message: "After",
-			Severity: "Debug",
-			Timestamp: time.Now().Unix(),
-		},
-		LogMessage{
-			Message: "Before",
-			Severity : "Debug",
-			Timestamp: time.Now().Unix(),
-		},
-	}
+	logs := DBGetAllLogs()
 
 	w = SetContentType(w)
 	w = SetReturnCode(w, http.StatusOK)
@@ -40,6 +28,26 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
+
+func GetLogsWithTimestamp(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	checkpoint := vars["timestamp"]
+	timestamp, parserr := strconv.ParseInt(checkpoint, 10, 64)
+
+	if parserr != nil {
+		panic(parserr)
+	}
+
+	logs := DBGetLogs(timestamp)
+
+	w = SetContentType(w)
+	w = SetReturnCode(w, http.StatusOK)
+
+	if err := EncodeResponse(w , logs); err != nil {
+		panic(err)
+	}
+}
+
 
 func GetLogsAfter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -50,15 +58,7 @@ func GetLogsAfter(w http.ResponseWriter, r *http.Request) {
 		panic(parserr)
 	}
 
-	logs := LogMessages{
-		LogMessage{
-			Message: "After",
-			Severity: "Debug",
-			Timestamp: timestamp,
-		},
-	}
-
-	fmt.Printf("Logs after %s", checkpoint)
+	logs := DBGetLogsAfter(timestamp)
 
 	w = SetContentType(w)
 	w = SetReturnCode(w, http.StatusOK)
@@ -72,19 +72,12 @@ func GetLogsBefore(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	checkpoint := vars["timestamp"]
 	timestamp, parserr := strconv.ParseInt(checkpoint, 10, 64)
+
 	if parserr != nil {
 		panic(parserr)
 	}
 
-	logs := LogMessages{
-		LogMessage{
-			Message: "Before",
-			Severity : "Debug",
-			Timestamp: timestamp,
-		},
-	}
-
-	fmt.Printf("Logs before %s", checkpoint)
+	logs := DBGetLogsBefore(timestamp)
 
 	w = SetContentType(w)
 	w = SetReturnCode(w, http.StatusOK)
@@ -115,7 +108,13 @@ func PostLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert data in db logEntry
+	res := DBPostLog(logEntry)
+	if res == 1 { // Error while inserting
+		w = SetContentType(w)
+		w = SetReturnCode(w, http.StatusInternalServerError)
+		return
+	}
+
 	w = SetContentType(w)
 	w = SetReturnCode(w, http.StatusOK)
 
@@ -146,7 +145,13 @@ func PostLogsInBath(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert data in db logEntry
+	res := DBPostLogsBatch(logEntries)
+	if res == 1 { // Error while inserting
+		w = SetContentType(w)
+		w = SetReturnCode(w, http.StatusInternalServerError)
+		return
+	}
+
 	w = SetContentType(w)
 	w = SetReturnCode(w, http.StatusOK)
 
