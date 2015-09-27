@@ -15,45 +15,33 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"Index",
-		"GET",
-		"/",
-		Welcome,
-	},
-	Route{
 		"AllLogs",
 		"GET",
 		"/logs",
 		GetLogs,
 	},
 	Route{
-		"LogsWithTimeStamp",
+		"LogsForTwistDevice",
 		"GET",
-		"/logs/{timestamp}",
-		GetLogsWithTimestamp,
+		"/logs/twist_device/{id}",
+		GetLogsForTwistDevice,
 	},
 	Route{
-		"LogsBefore",
+		"LogsForMobileDevice",
 		"GET",
-		"/logs/before/{timestamp}",
-		GetLogsBefore,
-	},
-	Route{
-		"LogsAfter",
-		"GET",
-		"/logs/after/{timestamp}",
-		GetLogsAfter,
+		"/logs/mobile_device/{id}",
+		GetLogsForMobileDevice,
 	},
 	Route{
 		"PostLog",
 		"POST",
-		"/log/insert",
+		"/logs",
 		PostLog,
 	},
 	Route{
-		"PostLog",
+		"PostMultipleLogs",
 		"POST",
-		"/logs/batchinsert",
-		PostLogsInBath,
+		"/logs/batch_insert",
+		PostLogsBatch,
 	},
 }

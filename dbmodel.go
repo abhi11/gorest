@@ -2,9 +2,11 @@ package main
 
 
 type LogMessage struct {
-	Message string `json:"message"`
 	Timestamp int64 `json:"timestamp"`
-	Severity string `json:"severity"`
+	LogLevel string `json:"log_level"`
+	MobileDeviceId string `json:"mobile_device_id"`
+	TwistDeviceId string `json:"twist_device_id"`
+	Log string `json:"log"`
 }
 
 type LogMessages []LogMessage

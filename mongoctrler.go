@@ -15,58 +15,20 @@ func DBGetSession() *mgo.Session {
 	return session
 }
 
-func DBGetAllLogs() LogMessages {
+func DBGetLogs(query bson.M, limit int) LogMessages {
 	session := DBGetSession()
 	col := session.DB("test").C("logs")
 	logs := LogMessages{}
 
-	err := col.Find(nil).All(&logs)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return logs
-}
-
-func DBGetLogsBefore(timestamp int64) LogMessages {
-	session := DBGetSession()
-	col := session.DB("test").C("logs")
-	logs := LogMessages{}
-
-	err := col.Find(bson.M{"timestamp" : bson.M{"$lt" : timestamp}}).All(&logs)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return logs
-}
-
-func DBGetLogsAfter(timestamp int64) LogMessages {
-	session := DBGetSession()
-	col := session.DB("test").C("logs")
-	logs := LogMessages{}
-
-	err := col.Find(bson.M{"timestamp" : bson.M{"$gt" : timestamp}}).All(&logs)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return logs
-
-}
-
-func DBGetLogs(timestamp int64) LogMessages {
-	session := DBGetSession()
-	col := session.DB("test").C("logs")
-	logs := LogMessages{}
-
-	err := col.Find(bson.M{"timestamp" : timestamp}).All(&logs)
-
-	if err != nil {
-		panic(err)
+	if limit < 0 {
+		if err := col.Find(query).All(&logs); err != nil {
+			panic(err)
+		}
+	} else {
+		err := col.Find(query).Limit(limit).All(&logs)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return logs

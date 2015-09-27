@@ -2,86 +2,115 @@ package main
 
 import (
 	"io"
-	"fmt"
-	"strconv"
 	"io/ioutil"
 	"net/http"
 	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
 	"github.com/gorilla/mux"
 )
 
-
-func Welcome(w http.ResponseWriter, r *http.Request) {
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
-
-	fmt.Fprintf(w, "Hi there")
-}
-
 func GetLogs(w http.ResponseWriter, r *http.Request) {
-	logs := DBGetAllLogs()
+	var logs LogMessages
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
+	query, err := MakeQuery(r)
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusInternalServerError)
+		panic(err)
+		return
+	}
 
+	count, err := GetLimitCount(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		panic(err)
+		return
+	}
+
+	if count < 0 {
+		logs = DBGetLogs(query, -1)
+	} else {
+		logs = DBGetLogs(query, count)
+	}
+
+	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
 }
 
-func GetLogsWithTimestamp(w http.ResponseWriter, r *http.Request) {
+func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	checkpoint := vars["timestamp"]
-	timestamp, parserr := strconv.ParseInt(checkpoint, 10, 64)
+	var logs LogMessages
 
-	if parserr != nil {
-		panic(parserr)
+	query, err := MakeQuery(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusInternalServerError)
+		return
 	}
 
-	logs := DBGetLogs(timestamp)
+	count, err := GetLimitCount(r)
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		return
+	}
 
+	if query == nil {
+		query = bson.M{}
+	}
+
+	query["twistdeviceid"] =  vars["id"]
+
+	if count < 0 {
+		logs = DBGetLogs(query, -1)
+	} else {
+		logs = DBGetLogs(query, count)
+	}
+
+	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
 }
 
-
-func GetLogsAfter(w http.ResponseWriter, r *http.Request) {
+func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	checkpoint := vars["timestamp"]
-	timestamp, parserr := strconv.ParseInt(checkpoint, 10, 64)
+	var logs LogMessages
 
-	if parserr != nil {
-		panic(parserr)
+	query, err := MakeQuery(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusInternalServerError)
+		return
 	}
 
-	logs := DBGetLogsAfter(timestamp)
+	count, err := GetLimitCount(r)
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
-
-	if err := EncodeResponse(w , logs); err != nil {
-		panic(err)
-	}
-}
-
-func GetLogsBefore(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	checkpoint := vars["timestamp"]
-	timestamp, parserr := strconv.ParseInt(checkpoint, 10, 64)
-
-	if parserr != nil {
-		panic(parserr)
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		return
 	}
 
-	logs := DBGetLogsBefore(timestamp)
+	if query == nil {
+		query = bson.M{}
+	}
+	query["mobiledeviceid"] = vars["id"]
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
+	if count < 0 {
+		logs = DBGetLogs(query, -1)
+	} else {
+		logs = DBGetLogs(query, count)
+	}
 
+	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {
 		panic(err)
 	}
@@ -100,9 +129,11 @@ func PostLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(body, &logEntry); err != nil {
-		w = SetContentType(w)
-		w = SetReturnCode(w, http.StatusUnsupportedMediaType) // cannot process
-		if err := json.NewEncoder(w).Encode(err); err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType) // cannot process
+		err := json.NewEncoder(w).Encode(err)
+
+		if err != nil {
 			panic(err)
 		}
 		return
@@ -110,20 +141,18 @@ func PostLog(w http.ResponseWriter, r *http.Request) {
 
 	res := DBPostLog(logEntry)
 	if res == 1 { // Error while inserting
-		w = SetContentType(w)
-		w = SetReturnCode(w, http.StatusInternalServerError)
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusInternalServerError)
 		return
 	}
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
-
+	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w, logEntry); err != nil {
 		panic(err)
 	}
 }
 
-func PostLogsInBath(w http.ResponseWriter, r *http.Request) {
+func PostLogsBatch(w http.ResponseWriter, r *http.Request) {
 	var logEntries LogMessages
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 20971520))
 
@@ -136,10 +165,11 @@ func PostLogsInBath(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(body, &logEntries); err != nil {
-		w = SetContentType(w)
-		w = SetReturnCode(w, http.StatusUnsupportedMediaType) // cannot process
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType) // cannot process
 
-		if err := json.NewEncoder(w).Encode(err); err != nil {
+		err := json.NewEncoder(w).Encode(err)
+		if err != nil {
 			panic(err)
 		}
 		return
@@ -147,14 +177,12 @@ func PostLogsInBath(w http.ResponseWriter, r *http.Request) {
 
 	res := DBPostLogsBatch(logEntries)
 	if res == 1 { // Error while inserting
-		w = SetContentType(w)
-		w = SetReturnCode(w, http.StatusInternalServerError)
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusInternalServerError)
 		return
 	}
 
-	w = SetContentType(w)
-	w = SetReturnCode(w, http.StatusOK)
-
+	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w, logEntries); err != nil {
 		panic(err)
 	}
