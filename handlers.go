@@ -11,29 +11,36 @@ import (
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
 	var logs LogMessages
+	caps := map[string]int{}
 
 	query, err := MakeQuery(r)
 	if err != nil {
 		w = SetContentTypeAndReturnCode(w,
 			http.StatusInternalServerError)
-		panic(err)
 		return
 	}
 
-	count, err := GetLimitCount(r)
+	limit, err := GetLimitCount(r)
 
 	if err != nil {
 		w = SetContentTypeAndReturnCode(w,
 			http.StatusUnsupportedMediaType)
-		panic(err)
 		return
 	}
 
-	if count < 0 {
-		logs = DBGetLogs(query, -1)
-	} else {
-		logs = DBGetLogs(query, count)
+	offset, err := GetOffsetCount(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		return
 	}
+
+	caps["limit"] = limit
+	caps["offset"] = offset
+
+	logs = DBGetLogs(query, caps)
+
 
 	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {
@@ -42,8 +49,8 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
 	var logs LogMessages
+	caps := map[string]int{}
 
 	query, err := MakeQuery(r)
 
@@ -53,7 +60,8 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := GetLimitCount(r)
+
+	limit, err := GetLimitCount(r)
 
 	if err != nil {
 		w = SetContentTypeAndReturnCode(w,
@@ -61,17 +69,25 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	offset, err := GetOffsetCount(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		return
+	}
+
+	caps["limit"] = limit
+	caps["offset"] = offset
+
 	if query == nil {
 		query = bson.M{}
 	}
 
+	vars := mux.Vars(r)
 	query["twistdeviceid"] =  vars["id"]
 
-	if count < 0 {
-		logs = DBGetLogs(query, -1)
-	} else {
-		logs = DBGetLogs(query, count)
-	}
+	logs = DBGetLogs(query, caps)
 
 	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {
@@ -80,8 +96,8 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
 	var logs LogMessages
+	caps := map[string]int{}
 
 	query, err := MakeQuery(r)
 
@@ -91,7 +107,7 @@ func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := GetLimitCount(r)
+	limit, err := GetLimitCount(r)
 
 	if err != nil {
 		w = SetContentTypeAndReturnCode(w,
@@ -99,16 +115,25 @@ func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	offset, err := GetOffsetCount(r)
+
+	if err != nil {
+		w = SetContentTypeAndReturnCode(w,
+			http.StatusUnsupportedMediaType)
+		return
+	}
+
+	caps["limit"] = limit
+	caps["offset"] = offset
+
 	if query == nil {
 		query = bson.M{}
 	}
+
+	vars := mux.Vars(r)
 	query["mobiledeviceid"] = vars["id"]
 
-	if count < 0 {
-		logs = DBGetLogs(query, -1)
-	} else {
-		logs = DBGetLogs(query, count)
-	}
+	logs = DBGetLogs(query, caps)
 
 	w = SetContentTypeAndReturnCode(w, http.StatusOK)
 	if err := EncodeResponse(w , logs); err != nil {

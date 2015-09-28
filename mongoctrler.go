@@ -15,20 +15,17 @@ func DBGetSession() *mgo.Session {
 	return session
 }
 
-func DBGetLogs(query bson.M, limit int) LogMessages {
+func DBGetLogs(query bson.M, caps map[string]int) LogMessages {
 	session := DBGetSession()
 	col := session.DB("test").C("logs")
 	logs := LogMessages{}
+	limit := caps["limit"]
+	offset := caps["offset"]
 
-	if limit < 0 {
-		if err := col.Find(query).All(&logs); err != nil {
-			panic(err)
-		}
-	} else {
-		err := col.Find(query).Limit(limit).All(&logs)
-		if err != nil {
-			panic(err)
-		}
+	err := col.Find(query).Skip(offset).Limit(limit).All(&logs)
+
+	if err != nil {
+		panic(err)
 	}
 
 	return logs

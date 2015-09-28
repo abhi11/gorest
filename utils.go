@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"encoding/json"
@@ -19,32 +20,44 @@ func EncodeResponse(w http.ResponseWriter, data interface{}) error {
 }
 
 func MakeQuery(r *http.Request) (bson.M, error) {
+	var after_timestamp int64
+	var before_timestamp int64
+
 	after := r.FormValue("after")
 	before := r.FormValue("before")
 	log_level := r.FormValue("log_level")
+
 	query := bson.M{}
 	time_query := bson.M{}
-	time_flag := false
+	after_flag := false
+	before_flag := false
 	no_filters := true
 
 	if after != "" {
-		after_timestamp, err := strconv.ParseInt(after, 10, 64)
+		parsed_time, err := strconv.ParseInt(after, 10, 64)
 		if err != nil {
 			return nil, err
 		}
-		time_query["$gte"] = after_timestamp
-		time_flag = true
+		time_query["$gte"] = parsed_time
+		after_timestamp = parsed_time
+		after_flag = true
 		no_filters = false
 	}
 
 	if before != "" {
-		before_timestamp, err := strconv.ParseInt(before, 10, 64)
+		parsed_time, err := strconv.ParseInt(before, 10, 64)
 		if err != nil {
 			return nil, err
 		}
-		time_query["$lt"] = before_timestamp
-		time_flag = true
+		time_query["$lt"] = parsed_time
+		before_timestamp = parsed_time
+		before_flag = true
 		no_filters = false
+	}
+
+	// check if agfter > before, and return with err
+	if after_flag && before_flag && after_timestamp > before_timestamp {
+		return nil, errors.New("After timestamp is more than before")
 	}
 
 	if log_level != "" {
@@ -52,7 +65,7 @@ func MakeQuery(r *http.Request) (bson.M, error) {
 		no_filters = false
 	}
 
-	if time_flag {
+	if before_flag || after_flag { // time flag is present
 		query["timestamp"] = time_query
 	}
 
@@ -63,18 +76,31 @@ func MakeQuery(r *http.Request) (bson.M, error) {
 	return query, nil
 }
 
-func GetLimitCount(r *http.Request) (int, error) {
-	limit := r.FormValue("limit")
+func GetIntValFromRequest(r *http.Request, key string) (int, error) {
+	val := r.FormValue(key)
 
-	if limit == "" {
-		return -1, nil
+	if val == "" {
+		return 0, nil
 	}
 
-	count, err := strconv.Atoi(limit)
+	intval, err := strconv.Atoi(val)
 
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
-	return count, nil
+	return intval, nil
+
+}
+
+func GetLimitCount(r *http.Request) (int, error) {
+	limit, err := GetIntValFromRequest(r, "limit")
+
+	return limit, err
+}
+
+func GetOffsetCount(r *http.Request) (int, error) {
+	offset, err := GetIntValFromRequest(r, "offset")
+
+	return offset, err
 }
