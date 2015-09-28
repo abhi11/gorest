@@ -16,10 +16,11 @@ A simple rest api interface to query and post logs
   * after : Unix time, for logs after the given time(more than equal to)
   * before : Unix time, for logs before the given time(less than)
   * limit : integer, limit the count of logs
+  * offset : integer, ignores the docs till offset and then returns, useful for pagination etc.
 
 **Note** : All the filters could be combined with each other.
 
-**Pre-Caution** : If both after and before are used together, make sure before > after
+**Pre-Caution** : If both after and before are used together, make sure before > after[an internal server will be served]
 
 ## Usage
 ```
@@ -71,6 +72,46 @@ $ mongod
 $ go get github.com/abhi11/gorest
 $ ./gorest
 ```
+
+## Output
+
+**Content-Type**: application/json;charset=UTF-8
+
+Below is a sample output from the following query:
+
+```
+http://localhost:8080/logs
+```
+
+**Output**
+
+```
+[
+    {
+        "timestamp": 1235000,
+        "log_level": "Error",
+        "mobile_device_id": "",
+        "twist_device_id": "twist12",
+        "log": "New log message"
+    },
+    {
+        "timestamp": 1235700,
+        "log_level": "Debug",
+        "mobile_device_id": "",
+        "twist_device_id": "twist100",
+        "log": "Another twist log"
+    },
+    {
+        "timestamp": 1235600,
+        "log_level": "Fatal",
+        "mobile_device_id": "nexus6",
+        "twist_device_id": "",
+        "log": "Log message from nexus 6"
+    }
+]
+```
+
+
 
 ## TODO
 * Refactoring, make separate packages as appropriate
