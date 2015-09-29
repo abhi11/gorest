@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -103,4 +104,31 @@ func GetOffsetCount(r *http.Request) (int, error) {
 	offset, err := GetIntValFromRequest(r, "offset")
 
 	return offset, err
+}
+
+func AddValueToBSONMap(srcmap map[string]string, destmap bson.M,srckey string, destkey string) bson.M {
+	if destmap == nil {
+		destmap = bson.M{}
+	}
+	destmap[destkey] = srcmap[srckey]
+
+	return destmap
+}
+
+func AddTwistIdToQuery(vars map[string]string, query bson.M) bson.M {
+	query = AddValueToBSONMap(vars, query, "id", "twistdeviceid")
+
+	return query
+}
+
+func AddMobileIdToQuery(vars map[string]string, query bson.M) bson.M {
+	query = AddValueToBSONMap(vars, query, "id", "mobiledeviceid")
+
+	return query
+}
+
+func GetURLVarsFromRequest(r *http.Request) map[string]string {
+	vars := mux.Vars(r)
+
+	return vars
 }

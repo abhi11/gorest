@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
-	"github.com/gorilla/mux"
 )
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
@@ -80,12 +78,8 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 	caps["limit"] = limit
 	caps["offset"] = offset
 
-	if query == nil {
-		query = bson.M{}
-	}
-
-	vars := mux.Vars(r)
-	query["twistdeviceid"] =  vars["id"]
+	vars := GetURLVarsFromRequest(r)
+	query = AddTwistIdToQuery(vars, query)
 
 	logs = DBGetLogs(query, caps)
 
@@ -126,12 +120,9 @@ func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
 	caps["limit"] = limit
 	caps["offset"] = offset
 
-	if query == nil {
-		query = bson.M{}
-	}
 
-	vars := mux.Vars(r)
-	query["mobiledeviceid"] = vars["id"]
+	vars := GetURLVarsFromRequest(r)
+	query = AddMobileIdToQuery(vars, query)
 
 	logs = DBGetLogs(query, caps)
 
