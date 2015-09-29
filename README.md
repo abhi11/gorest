@@ -50,7 +50,7 @@ curl -i -X POST -H 'Content-Type: application/json'-d '[{"log":"Another twist lo
 
 **No Authentication support yet**
 
-### Testing
+## Testing
 * Use the logs.json file to import the data into mongodb
 
 ```
@@ -114,9 +114,9 @@ http://localhost:8080/logs
 
 
 ## TODO
-* Refactoring, make separate packages as appropriate
-* Better error handling
 * Add unit tests
+* Better error handling (mostly involves logging errors)
+* Refactoring (incremental stuff)
 * Add support to have customizable monogdb host
 * Write a script to start gorest [assuming mongodb is present]
 * Adding docker support

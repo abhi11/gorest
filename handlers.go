@@ -140,7 +140,10 @@ func PostLog(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 
 	if err != nil {
-		panic(err)
+		// log err
+		w = util.SetContentTypeAndReturnCode(w,
+			http.StatusRequestEntityTooLarge) // data too large
+		return
 	}
 
 	if err := r.Body.Close(); err != nil {
@@ -149,12 +152,7 @@ func PostLog(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(body, &logEntry); err != nil {
 		w = util.SetContentTypeAndReturnCode(w,
-			http.StatusUnsupportedMediaType) // cannot process
-		err := json.NewEncoder(w).Encode(err)
-
-		if err != nil {
-			panic(err)
-		}
+			http.StatusBadRequest) // malformed data
 		return
 	}
 
@@ -176,7 +174,10 @@ func PostLogsBatch(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 20971520))
 
 	if err != nil {
-		panic(err)
+		// log error
+		w = util.SetContentTypeAndReturnCode(w,
+			http.StatusRequestEntityTooLarge) // data too large
+		return
 	}
 
 	if err := r.Body.Close(); err != nil {
@@ -185,16 +186,12 @@ func PostLogsBatch(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(body, &logEntries); err != nil {
 		w = util.SetContentTypeAndReturnCode(w,
-			http.StatusUnsupportedMediaType) // cannot process
-
-		err := json.NewEncoder(w).Encode(err)
-		if err != nil {
-			panic(err)
-		}
+			http.StatusBadRequest) // malformed json
 		return
 	}
 
 	res := mongo.DBPostLogsBatch(logEntries)
+
 	if res == 1 { // Error while inserting
 		w = util.SetContentTypeAndReturnCode(w,
 			http.StatusInternalServerError)
