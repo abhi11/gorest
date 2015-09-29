@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"errors"
@@ -77,7 +77,7 @@ func MakeQuery(r *http.Request) (bson.M, error) {
 	return query, nil
 }
 
-func GetIntValFromRequest(r *http.Request, key string) (int, error) {
+func IntValFromRequest(r *http.Request, key string) (int, error) {
 	val := r.FormValue(key)
 
 	if val == "" {
@@ -91,22 +91,23 @@ func GetIntValFromRequest(r *http.Request, key string) (int, error) {
 	}
 
 	return intval, nil
-
 }
 
-func GetLimitCount(r *http.Request) (int, error) {
-	limit, err := GetIntValFromRequest(r, "limit")
+func LimitCount(r *http.Request) (int, error) {
+	limit, err := IntValFromRequest(r, "limit")
 
 	return limit, err
 }
 
-func GetOffsetCount(r *http.Request) (int, error) {
-	offset, err := GetIntValFromRequest(r, "offset")
+func OffsetCount(r *http.Request) (int, error) {
+	offset, err := IntValFromRequest(r, "offset")
 
 	return offset, err
 }
 
-func AddValueToBSONMap(srcmap map[string]string, destmap bson.M,srckey string, destkey string) bson.M {
+func AddValueToBSONMap(srcmap map[string]string, destmap bson.M,
+	srckey string, destkey string) bson.M {
+
 	if destmap == nil {
 		destmap = bson.M{}
 	}
@@ -127,7 +128,7 @@ func AddMobileIdToQuery(vars map[string]string, query bson.M) bson.M {
 	return query
 }
 
-func GetURLVarsFromRequest(r *http.Request) map[string]string {
+func URLVarsFromRequest(r *http.Request) map[string]string {
 	vars := mux.Vars(r)
 
 	return vars

@@ -1,12 +1,13 @@
-package main
+package mongo
 
 
 import (
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/abhi11/gorest/model"
 )
 
-func DBGetSession() *mgo.Session {
+func DBSession() *mgo.Session {
 	session, err := mgo.Dial("localhost")
 	if err != nil {
 		// log error
@@ -15,10 +16,10 @@ func DBGetSession() *mgo.Session {
 	return session
 }
 
-func DBGetLogs(query bson.M, caps map[string]int) LogMessages {
-	session := DBGetSession()
+func DBGetLogs(query bson.M, caps map[string]int) model.LogMessages {
+	session := DBSession()
 	col := session.DB("test").C("logs")
-	logs := LogMessages{}
+	logs := model.LogMessages{}
 	limit := caps["limit"]
 	offset := caps["offset"]
 
@@ -31,8 +32,8 @@ func DBGetLogs(query bson.M, caps map[string]int) LogMessages {
 	return logs
 }
 
-func DBPostLog(logEntry LogMessage) int {
-	session := DBGetSession()
+func DBPostLog(logEntry model.LogMessage) int {
+	session := DBSession()
 	col := session.DB("test").C("logs")
 	err := col.Insert(logEntry)
 
@@ -44,8 +45,8 @@ func DBPostLog(logEntry LogMessage) int {
 	return 0
 }
 
-func DBPostLogsBatch(logEntries LogMessages) int {
-	session := DBGetSession()
+func DBPostLogsBatch(logEntries model.LogMessages) int {
+	session := DBSession()
 	col := session.DB("test").C("logs")
 
 	for _, logEntry := range logEntries {
