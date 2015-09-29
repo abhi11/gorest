@@ -1,10 +1,9 @@
 package mongo
 
-
 import (
+	"github.com/abhi11/gorest/model"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/abhi11/gorest/model"
 )
 
 func DBSession() *mgo.Session {

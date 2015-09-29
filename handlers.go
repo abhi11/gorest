@@ -1,13 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/abhi11/gorest/model"
+	"github.com/abhi11/gorest/mongo"
+	"github.com/abhi11/gorest/util"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"encoding/json"
-	"github.com/abhi11/gorest/util"
-	"github.com/abhi11/gorest/mongo"
-	"github.com/abhi11/gorest/model"
 )
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
@@ -42,9 +42,8 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	logs = mongo.DBGetLogs(query, caps)
 
-
 	w = util.SetContentTypeAndReturnCode(w, http.StatusOK)
-	if err := util.EncodeResponse(w , logs); err != nil {
+	if err := util.EncodeResponse(w, logs); err != nil {
 		panic(err)
 	}
 }
@@ -60,7 +59,6 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError)
 		return
 	}
-
 
 	limit, err := util.LimitCount(r)
 
@@ -87,7 +85,7 @@ func GetLogsForTwistDevice(w http.ResponseWriter, r *http.Request) {
 	logs = mongo.DBGetLogs(query, caps)
 
 	w = util.SetContentTypeAndReturnCode(w, http.StatusOK)
-	if err := util.EncodeResponse(w , logs); err != nil {
+	if err := util.EncodeResponse(w, logs); err != nil {
 		panic(err)
 	}
 }
@@ -123,14 +121,13 @@ func GetLogsForMobileDevice(w http.ResponseWriter, r *http.Request) {
 	caps["limit"] = limit
 	caps["offset"] = offset
 
-
 	vars := util.URLVarsFromRequest(r)
 	query = util.AddMobileIdToQuery(vars, query)
 
 	logs = mongo.DBGetLogs(query, caps)
 
 	w = util.SetContentTypeAndReturnCode(w, http.StatusOK)
-	if err := util.EncodeResponse(w , logs); err != nil {
+	if err := util.EncodeResponse(w, logs); err != nil {
 		panic(err)
 	}
 }

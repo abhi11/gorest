@@ -1,12 +1,12 @@
 package util
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
 	"encoding/json"
+	"errors"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
+	"net/http"
+	"strconv"
 )
 
 func SetContentTypeAndReturnCode(w http.ResponseWriter, status int) http.ResponseWriter {
